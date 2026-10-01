@@ -1,19 +1,52 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
+import { GoogleGenAI } from "@google/genai";
 import { z } from "zod/v4";
 import { CRITERIA, EXPERIENCE_BAND, weightedTotal, verdictFor } from "./rubric";
 import type { Analysis, Drafts, Hire, Role, SuccessPattern } from "./types";
 import { ROLE_LABEL } from "./types";
 
-const MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
-export const aiEnabled = () => Boolean(process.env.ANTHROPIC_API_KEY);
+// Gemini if GEMINI_API_KEY is set, else Claude if ANTHROPIC_API_KEY is set,
+// else the offline keyword heuristic.
+export type Provider = "gemini" | "claude" | "heuristic";
+export function provider(): Provider {
+  if (process.env.GEMINI_API_KEY) return "gemini";
+  if (process.env.ANTHROPIC_API_KEY) return "claude";
+  return "heuristic";
+}
+export const aiEnabled = () => provider() !== "heuristic";
 
-let client: Anthropic | null = null;
-const claude = () => (client ??= new Anthropic());
+const GEMINI_MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+const CLAUDE_MODEL = process.env.ANTHROPIC_MODEL || "claude-opus-5-5";
+
+let anthropic: Anthropic | null = null;
+let gemini: GoogleGenAI | null = null;
 
 async function structured<T>(schema: z.ZodType<T>, system: string, user: string, maxTokens = 8000): Promise<T> {
-  const res = await claude().messages.parse({
-    model: MODEL,
+  if (provider() === "gemini") {
+    gemini ??= new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+    const { $schema: _s, ...jsonSchema } = z.toJSONSchema(schema) as Record<string, unknown>;
+    const res = await gemini.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: [{ role: "user", parts: [{ text: user }] }],
+      config: {
+        systemInstruction: system,
+        responseMimeType: "application/json",
+        responseJsonSchema: jsonSchema,
+        maxOutputTokens: maxTokens * 2,
+        temperature: 0.2,
+      },
+    });
+    const text = res.text;
+    if (!text) throw new Error(`Gemini returned no content (${res.candidates?.[0]?.finishReason ?? "unknown reason"}).`);
+    const parsed = schema.safeParse(JSON.parse(text));
+    if (!parsed.success) throw new Error("Gemini returned JSON that didn't match the expected shape.");
+    return parsed.data;
+  }
+
+  anthropic ??= new Anthropic();
+  const res = await anthropic.messages.parse({
+    model: CLAUDE_MODEL,
     max_tokens: maxTokens,
     output_config: { effort: "medium", format: zodOutputFormat(schema) },
     system,
@@ -105,7 +138,7 @@ ${FAIRNESS}`,
       SPM: { criteria: spm, total: spmTotal, verdict: verdictFor(spmTotal) },
     },
     best_fit_role: spmTotal > pmTotal + 5 && yrs >= EXPERIENCE_BAND.SPM.min ? "SPM" : pmTotal >= spmTotal ? "PM" : yrs >= EXPERIENCE_BAND.SPM.min ? "SPM" : "PM",
-    scored_by: aiEnabled() ? "claude" : "heuristic",
+    scored_by: provider(),
   };
 }
 
@@ -154,7 +187,7 @@ const PatternSchema = z.object({
 });
 
 export async function extractPattern(hires: Hire[]): Promise<Omit<SuccessPattern, "source" | "updated_at">> {
-  if (!aiEnabled()) throw new Error("Set ANTHROPIC_API_KEY to extract a pattern from hire profiles.");
+  if (!aiEnabled()) throw new Error("Set GEMINI_API_KEY (or ANTHROPIC_API_KEY) to extract a pattern from hire profiles.");
   const profiles = hires
     .map(
       (h) =>
@@ -206,7 +239,7 @@ function heuristicScore(text: string, pattern: SuccessPattern) {
     years_experience: years,
     pattern_signals_found: pm.find((s) => s.key === "pattern_match")!.score >= 3 ? [pattern.signals[0]?.name ?? "Pattern match"] : [],
     red_flags: [],
-    why_ranked: "Scored by keyword heuristic because no ANTHROPIC_API_KEY is set. Treat as a rough sort, not a judgement.",
+    why_ranked: "Scored by keyword heuristic because no AI API key is set. Treat as a rough sort, not a judgement.",
     pm_scores: pm,
     spm_scores: scores("SPM"),
   };

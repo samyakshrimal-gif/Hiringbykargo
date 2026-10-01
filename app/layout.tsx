@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { Sidebar } from "@/components/Sidebar";
-import { aiEnabled } from "@/lib/ai";
+import { provider } from "@/lib/ai";
 import { storageMode } from "@/lib/store";
 
 export const metadata: Metadata = {
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   const status = {
-    ai: aiEnabled(),
+    ai: provider(),
     storage: storageMode(),
     email: Boolean(process.env.RESEND_API_KEY),
     testRecipient: Boolean(process.env.EMAIL_TEST_RECIPIENT),

@@ -28,7 +28,7 @@ export interface Analysis {
   why_ranked: string;
   by_role: Record<Role, RoleAssessment>;
   best_fit_role: Role;
-  scored_by: "claude" | "heuristic";
+  scored_by: "gemini" | "claude" | "heuristic";
 }
 
 export interface Brief {

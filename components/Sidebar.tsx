@@ -11,7 +11,7 @@ const NAV = [
 ];
 
 interface Status {
-  ai: boolean;
+  ai: "gemini" | "claude" | "heuristic";
   storage: string;
   email: boolean;
   testRecipient: boolean;
@@ -55,7 +55,7 @@ export function Sidebar({ status }: { status: Status }) {
         <div className="mt-auto hidden space-y-2 border-t border-line pt-5 text-xs text-muted lg:block">
           <div className="eyebrow mb-3">System</div>
           <div className="flex items-center gap-2">
-            <Dot on={status.ai} /> {status.ai ? "Claude scoring" : "Heuristic scoring (no API key)"}
+            <Dot on={status.ai !== "heuristic"} /> {{ gemini: "Gemini scoring", claude: "Claude scoring", heuristic: "Heuristic scoring (no API key)" }[status.ai]}
           </div>
           <div className="flex items-center gap-2">
             <Dot on={status.storage === "supabase"} /> {status.storage === "supabase" ? "Supabase" : "Local file storage"}

@@ -12,12 +12,12 @@ A hiring tool for Arjun Mehta (MESA Case 2: *Arjun and the Hiring Backlog*). It 
 | **Input**: CV file and the selected role | `app/api/candidates/route.ts` takes PDF, DOCX or TXT |
 | **Context**: extract and strip personal details | `lib/extract.ts` removes name, email, phone, links, DOB/gender/address lines. The AI only ever sees the redacted text; you can view it on each candidate page |
 | **Processing**: score against both PM and SPM rubrics | `lib/rubric.ts` has 7 weighted criteria per role. The heaviest weight is the success pattern; JD-style craft criteria act as a floor |
-| **AI**: interview brief and personalised emails | `lib/ai.ts` uses Claude structured outputs: scores with evidence, probe questions, plus *both* an invite and a rejection draft |
+| **AI**: interview brief and personalised emails | `lib/ai.ts` uses Gemini (or Claude) with JSON-schema output: scores with evidence, probe questions, plus *both* an invite and a rejection draft |
 | **Output**: ranked dashboard and one-click send | `/` ranked shortlist, `/candidates/[id]` decision panel. Advance sends the invite, Pass sends the rejection, Hold sends nothing. A one-line reason is required and stored |
 
 There are two additions the brief calls for:
 
-- **`/calibration`**: paste the 8 profiles from `hires/` and click *Extract pattern*. Claude compares the thriving hires (Exceeds and still at Kargo) with the rest and names the CV-observable signals they share. That pattern feeds every score. Until you extract it, a clearly labelled working hypothesis is used instead.
+- **`/calibration`**: paste the 8 profiles from `hires/` and click *Extract pattern*. The AI compares the thriving hires (Exceeds and still at Kargo) with the rest and names the CV-observable signals they share. That pattern feeds every score. Until you extract it, a clearly labelled working hypothesis is used instead.
 - **`/log`**: every decision, the system's recommendation, Arjun's reason, and whether the candidate heard back. This replaces "decisions exist only in his head".
 
 ## Run locally
@@ -34,7 +34,7 @@ With no keys at all it still runs end to end: keyword scoring, local JSON storag
 
 1. **Supabase**: create a project, open the SQL editor and run `supabase/schema.sql`. Copy the project URL and the `service_role` key (Settings → API).
 2. **Resend**: create an API key. Leave `RESEND_FROM` as `onboarding@resend.dev` and set `EMAIL_TEST_RECIPIENT` to your own email until you verify a domain.
-3. **Anthropic**: create an API key at console.anthropic.com.
+3. **Gemini**: create an API key at aistudio.google.com/apikey (it starts with `AIza`) and set `GEMINI_API_KEY`. Claude works too via `ANTHROPIC_API_KEY`.
 4. **Vercel**: import this GitHub repo and add the env vars from `.env.example`, **including `APP_PASSWORD`**. Deploy.
 
 ## Fairness guardrails

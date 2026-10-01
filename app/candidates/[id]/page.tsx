@@ -129,7 +129,7 @@ export default async function CandidatePage({ params }: { params: Promise<{ id: 
             </details>
 
             <div className="flex items-center justify-between text-xs text-muted">
-              <span>Scored by {a.scored_by === "claude" ? "Claude" : "keyword heuristic"}</span>
+              <span>Scored by {{ gemini: "Gemini", claude: "Claude", heuristic: "keyword heuristic" }[a.scored_by]}</span>
               <CandidateActions id={c.id} />
             </div>
           </div>
