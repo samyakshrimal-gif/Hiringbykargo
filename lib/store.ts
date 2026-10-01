@@ -24,7 +24,9 @@ interface LocalDb {
   hires: Hire[];
   pattern: SuccessPattern | null;
 }
-const DB_FILE = path.join(process.cwd(), ".data", "db.json");
+// Vercel's filesystem is read-only except /tmp, which is per-instance and
+// temporary: fine for a demo, use Supabase for anything real.
+const DB_FILE = process.env.VERCEL ? "/tmp/kargo-db.json" : path.join(process.cwd(), ".data", "db.json");
 
 async function readLocal(): Promise<LocalDb> {
   try {
