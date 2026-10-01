@@ -1,0 +1,86 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Instrument Serif", ui-serif, Georgia, serif;
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --color-paper: #f4f1ea;
+  --color-card: #fffdf8;
+  --color-ink: #1a1916;
+  --color-ink-2: #3d3a34;
+  --color-muted: #77726a;
+  --color-line: #e3ded2;
+  --color-line-2: #d3ccbc;
+  --color-accent: #d9480f;
+  --color-accent-soft: #fbe6da;
+  --color-go: #2f7d4f;
+  --color-go-soft: #e1efe5;
+  --color-mid: #a8690f;
+  --color-mid-soft: #f6ebd5;
+  --color-stop: #9b2c2c;
+  --color-stop-soft: #f5e1de;
+}
+
+html { background: var(--color-paper); }
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* faint ruled-ledger texture behind content */
+.ledger {
+  background-image: linear-gradient(to bottom, transparent 31px, rgba(26, 25, 22, 0.035) 32px);
+  background-size: 100% 32px;
+}
+
+.card {
+  background: var(--color-card);
+  border: 1px solid var(--color-line);
+  border-radius: 14px;
+}
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 9px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.05s;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-ink { background: var(--color-ink); color: var(--color-paper); }
+.btn-ink:hover:not(:disabled) { background: #000; }
+.btn-ghost { border-color: var(--color-line-2); color: var(--color-ink); background: transparent; }
+.btn-ghost:hover:not(:disabled) { background: var(--color-card); border-color: var(--color-ink); }
+.btn-accent { background: var(--color-accent); color: #fff; }
+.btn-accent:hover:not(:disabled) { background: #b93c0a; }
+
+.field {
+  width: 100%;
+  background: var(--color-card);
+  border: 1px solid var(--color-line-2);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  outline: none;
+}
+.field:focus { border-color: var(--color-ink); box-shadow: 0 0 0 3px rgba(26, 25, 22, 0.08); }
+
+::selection { background: var(--color-accent-soft); }
